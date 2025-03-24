@@ -1,0 +1,33 @@
+#+title: minisign-verify - A solution to the CL package manager bootstrapping problem
+#+options: ^:{}
+
+This is a CL implementation of [[https://jedisct1.github.io/minisign/][Minisign]] verification with no dependencies. It
+provides a single function, ~verify~, which returns the comments associated with
+the signature if the signature is valid and signals the condition
+~verification-error~ if the signature is malformed or invalid. For portability
+reasons, input and output are based on octets, not characters. We don't support
+the legacy format and don't enforce comment length limits.
+
+You may wonder why this exists, and especially why it implements crypto
+primitives from scratch; isn't that bad? The reason is that Common Lisp has a
+notorious bootstrapping problem where package managers such as Quicklisp must
+ensure authenticity before they can install packages that could do so.
+Full-blown cryptographic libraries are too bulky to vendor with the package
+manager (and might end up becoming outdated there) or require FFI (which is its
+own can of worms), whereas this is a single small and portable file that can be
+vendored with ease.
+
+In this usecase, there are no secrets to be kept, no randomness to ensure, and
+no side-channels to cover; all that matters is that the signature scheme is
+secure, easy to implement with the base language, and has established signing
+tools so that you don't have to implement that (much harder) part.
+
+Minisign satisfies these requirements; it's an established simple format based
+(through libsodium) on Blake2b-512 and Ed25519, both of which are easy to
+implement off their respective RFCs.
+
+Keep in mind that Blake2b-512 makes heavy use of 64-bit arithmetic, which is
+very fast on SBCL but much slower on many other implementations. We provide an
+alternative implementation based on split 32-bit arithmetic, but on 32-bit
+platforms, even that might be slow, so consider keeping your bootstrapping data
+in the low megabyte range.
