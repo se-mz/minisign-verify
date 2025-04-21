@@ -60,7 +60,8 @@ arithmetic. This can significantly improve performance on many implementations."
   `(logior ,@(loop :for i :from 0 :below n
                    :collect `(ash (aref ,data (+ ,offset ,i)) ,(* 8 i)))))
 
-(declaim (ftype (function (ub64 ub64) ub64) ub64+ rotr64)
+(declaim (ftype (function (ub64 ub64) ub64) ub64+)
+         (ftype (function (ub64 (integer 0 63)) ub64) rotr64)
          (inline ub64+ rotr64))
 
 (defun ub64+ (x y)
@@ -68,7 +69,8 @@ arithmetic. This can significantly improve performance on many implementations."
   (ldb (byte 64 0) (+ x y)))
 
 (defun rotr64 (x y)
-  (declare (type ub64 x y))
+  (declare (type ub64 x)
+           (type (integer 0 63) y))
   (logior (ldb (byte 64 0) (ash x (- y)))
           (ldb (byte 64 0) (ash x (- 64 y)))))
 
